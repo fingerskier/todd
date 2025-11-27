@@ -24,6 +24,9 @@ Settings that are prefixed `todd:` are related to the app itself
 
 ## Features Under Construction
 * Postegres DB connection
+* Settings page
+  * Database connection settings
+  * Local model settings
 * Dashboard
   * Status of local models
   * Database stats
