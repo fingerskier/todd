@@ -4,14 +4,19 @@ Tesseract-Optimized Dimensional Daemon
 
 
 ## Special Settings
-Settings that are prefixed `todd:` are related to the app itself
+Use `electron-store` to persist application settings.
 * App window setup
   * On startup these are checked against the current display to avoid off-screen windows
-  * `todd:windowX` - The X position of the window
-  * `todd:windowY` - The Y position of the window
-  * `todd:windowWidth` - The width of the window
-  * `todd:windowHeight` - The height of the window
-* 
+  * `windowX` - The X position of the window
+  * `windowY` - The Y position of the window
+  * `windowWidth` - The width of the window
+  * `windowHeight` - The height of the window
+* Database setup
+  * `dbHost` - The hostname of the Postgres database
+  * `dbPort` - The port of the Postgres database
+  * `dbName` - The name of the Postgres database
+  * `dbUser` - The username for the Postgres database
+  * `dbPassword` - The password for the Postgres database
 
 
 ## Architecture
