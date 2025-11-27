@@ -40,7 +40,8 @@ export const migrations = [
         CREATE TABLE IF NOT EXISTS nodes (
           id SERIAL PRIMARY KEY,  -- Unique identifier for each node
           label TEXT,             -- Optional: A label or type for the node
-          properties JSONB        -- Optional: Flexible storage for node properties (e.g., name, age);
+          properties JSONB        -- Optional: Flexible storage for node properties (e.g., name, age)
+        );
       `);
       console.log('Created nodes table', res3);
 
@@ -56,7 +57,10 @@ export const migrations = [
       `);
       console.log('Created edges table', res4);
 
-      let res5 = await client.query(`
+      let res5 = await client.query('CREATE EXTENSION IF NOT EXISTS vector');
+      console.log('Ensured vector extension', res5);
+
+      let res6 = await client.query(`
         CREATE TABLE IF NOT EXISTS vectors (
           id SERIAL PRIMARY KEY,
           item_type TEXT NOT NULL,
@@ -66,7 +70,7 @@ export const migrations = [
           UNIQUE (item_type, item_id)
         );
       `);
-      console.log('Created vectors table', res5);
+      console.log('Created vectors table', res6);
     },
   },
 ];
