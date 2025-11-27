@@ -6,17 +6,16 @@ export const migrations = [
     name: 'initial-schema',
     description: 'Create migrations, logs, kv, graph, and vector tables',
     up: async (client) => {
-      await client.query('CREATE EXTENSION IF NOT EXISTS vector');
-
-      await client.query(`
+      let res0 = await client.query(`
         CREATE TABLE IF NOT EXISTS migrations (
           id INTEGER PRIMARY KEY,
           name TEXT NOT NULL,
           applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
       `);
+      console.log('Created migrations table', res0);
 
-      await client.query(`
+      let res1 = await client.query(`
         CREATE TABLE IF NOT EXISTS logs (
           id SERIAL PRIMARY KEY,
           level TEXT NOT NULL,
@@ -25,23 +24,27 @@ export const migrations = [
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
       `);
+      console.log('Created logs table',  res1);
 
-      await client.query(`
+
+      let res2 = await client.query(`
         CREATE TABLE IF NOT EXISTS kv (
           key TEXT PRIMARY KEY,
           value JSONB,
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
       `);
+      console.log('Created kv table', res2);
 
-      await client.query(`
+      let res3 = await client.query(`
         CREATE TABLE IF NOT EXISTS nodes (
           id SERIAL PRIMARY KEY,  -- Unique identifier for each node
           label TEXT,             -- Optional: A label or type for the node
           properties JSONB        -- Optional: Flexible storage for node properties (e.g., name, age);
       `);
+      console.log('Created nodes table', res3);
 
-      await client.query(`
+      let res4 = await client.query(`
         CREATE TABLE IF NOT EXISTS edges (
           id SERIAL PRIMARY KEY,  -- Unique identifier for each edge
           source_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,  -- Reference to the source node
@@ -50,9 +53,10 @@ export const migrations = [
           properties JSONB,       -- Optional: Flexible storage for edge properties (e.g., weight, since)
           directed BOOLEAN DEFAULT TRUE  -- Optional: Indicates if the edge is directed (true) or undirected (false)
         );
-    `);
+      `);
+      console.log('Created edges table', res4);
 
-      await client.query(`
+      let res5 = await client.query(`
         CREATE TABLE IF NOT EXISTS vectors (
           id SERIAL PRIMARY KEY,
           item_type TEXT NOT NULL,
@@ -62,6 +66,7 @@ export const migrations = [
           UNIQUE (item_type, item_id)
         );
       `);
+      console.log('Created vectors table', res5);
     },
   },
 ];
