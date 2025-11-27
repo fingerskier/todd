@@ -107,8 +107,12 @@ const createWindow = () => {
 
   setAppMenu(mainWindow);
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  const shouldOpenDevTools =
+    process.env.OPEN_DEVTOOLS === 'true' || process.env.NODE_ENV === 'development';
+
+  if (shouldOpenDevTools) {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished
