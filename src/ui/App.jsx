@@ -1,13 +1,19 @@
-import React from 'react'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MenuBar from './MenuBar';
+import Home from './Home';
+import Settings from './Settings';
 
 export default function App() {
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", padding: 24 }}>
-      <h1>Electron + Vite + React (JavaScript)</h1>
-      <p>If you can read this, everything is wired correctly.</p>
-      <pre style={{ marginTop: 16, opacity: 0.7 }}>
-        window.api?.ping() =&gt; {typeof window !== "undefined" && window.api ? window.api.ping() : "no preload api"}
-      </pre>
-    </div>
-  )  
+    <Router>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+        <MenuBar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </div>
+    </Router>
+  );
 }
