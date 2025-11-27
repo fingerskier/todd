@@ -77,6 +77,18 @@ const setAppMenu = (mainWindow) => {
           label: 'Settings',
           click: () => navigateTo('/settings'),
         },
+        {
+          label: 'Logs',
+          click: () => navigateTo('/logs'),
+        },
+        {
+          label: 'Graphs',
+          click: () => navigateTo('/graphs'),
+        },
+        {
+          label: 'Key/Value Data',
+          click: () => navigateTo('/kv'),
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'toggleDevTools' },

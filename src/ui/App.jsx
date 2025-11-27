@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import Home from './Home';
 import Settings from './Settings';
 import Dashboard from './Dashboard';
+import Logs from './Logs';
+import Graphs from './Graphs';
+import KeyValueData from './KeyValueData';
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -23,6 +26,9 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/logs" element={<Logs />} />
+        <Route path="/graphs" element={<Graphs />} />
+        <Route path="/kv" element={<KeyValueData />} />
       </Routes>
     </div>
   );
