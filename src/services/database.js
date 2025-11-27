@@ -2,6 +2,12 @@ import { Pool } from 'pg';
 
 let pool = null;
 
+function ensureConnected() {
+  if (!pool) {
+    throw new Error('Database not connected');
+  }
+}
+
 export async function connect(config) {
   try {
     if (pool) {
@@ -40,13 +46,21 @@ export async function disconnect() {
 
 export async function query(text, params) {
   try {
-    if (!pool) {
-      throw new Error('Database not connected');
-    }
+    ensureConnected();
     const result = await pool.query(text, params);
     return { success: true, data: result.rows };
   } catch (error) {
     return { success: false, message: error.message };
+  }
+}
+
+export async function withClient(callback) {
+  ensureConnected();
+  const client = await pool.connect();
+  try {
+    return await callback(client);
+  } finally {
+    client.release();
   }
 }
 
