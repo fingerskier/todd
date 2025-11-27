@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, screen } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import * as db from './services/database.js';
+import { applyPendingMigrations, getMigrationStatus } from './services/migrations.js';
 import Store from 'electron-store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -156,4 +157,13 @@ ipcMain.handle('db:testConnection', async (event, config) => {
 
 ipcMain.handle('db:isConnected', () => {
   return db.isConnected();
+});
+
+// Migration IPC handlers
+ipcMain.handle('db:migrations:status', async () => {
+  return await getMigrationStatus();
+});
+
+ipcMain.handle('db:migrations:apply', async () => {
+  return await applyPendingMigrations();
 });

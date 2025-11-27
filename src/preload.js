@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('api', {
     testConnection: (config) => ipcRenderer.invoke('db:testConnection', config),
     isConnected: () => ipcRenderer.invoke('db:isConnected'),
   },
+  migrations: {
+    status: () => ipcRenderer.invoke('db:migrations:status'),
+    apply: () => ipcRenderer.invoke('db:migrations:apply'),
+  },
   navigation: {
     onNavigate: (callback) => {
       const subscription = (_event, path) => callback(path);

@@ -11,6 +11,9 @@ export default function Settings() {
   const [isConnected, setIsConnected] = useState(false);
   const [message, setMessage] = useState('');
   const [testMessage, setTestMessage] = useState('');
+  const [migrationStatus, setMigrationStatus] = useState([]);
+  const [migrationMessage, setMigrationMessage] = useState('');
+  const [isApplyingMigrations, setIsApplyingMigrations] = useState(false);
 
   useEffect(() => {
     checkConnection();
@@ -20,6 +23,14 @@ export default function Settings() {
       setConfig(JSON.parse(saved));
     }
   }, []);
+
+  useEffect(() => {
+    if (isConnected) {
+      refreshMigrations();
+    } else {
+      setMigrationStatus([]);
+    }
+  }, [isConnected]);
 
   const checkConnection = async () => {
     const connected = await window.api.database.isConnected();
@@ -56,6 +67,27 @@ export default function Settings() {
     setMessage(result.success ? '✓ ' + result.message : '✗ ' + result.message);
     if (result.success) {
       setIsConnected(false);
+    }
+  };
+
+  const refreshMigrations = async () => {
+    const status = await window.api.migrations.status();
+    setMigrationStatus(status);
+  };
+
+  const handleApplyMigrations = async () => {
+    setMigrationMessage('Applying migrations...');
+    setIsApplyingMigrations(true);
+    try {
+      const result = await window.api.migrations.apply();
+      const appliedCount = result.applied?.length ?? 0;
+      const suffix = appliedCount === 0 ? '' : ` (${appliedCount} applied)`;
+      setMigrationMessage('✓ ' + (result.message || 'Migrations complete') + suffix);
+      await refreshMigrations();
+    } catch (error) {
+      setMigrationMessage('✗ ' + error.message);
+    } finally {
+      setIsApplyingMigrations(false);
     }
   };
 
@@ -196,6 +228,88 @@ export default function Settings() {
               fontSize: 14,
             }}>
               {message}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 32 }}>
+        <h2>Database Migrations</h2>
+        <p style={{ color: '#6c757d', marginTop: 8 }}>
+          Track and run schema migrations stored in the application.
+        </p>
+
+        <div style={{
+          marginTop: 12,
+          padding: 12,
+          backgroundColor: '#fff',
+          border: '1px solid #dee2e6',
+          borderRadius: 4,
+          maxWidth: 600,
+        }}>
+          {!isConnected && (
+            <div style={{ color: '#721c24', marginBottom: 8 }}>
+              Connect to the database to view and apply migrations.
+            </div>
+          )}
+
+          {isConnected && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontWeight: 500 }}>Pending migrations: {migrationStatus.filter((m) => !m.appliedAt).length}</div>
+              <button
+                onClick={handleApplyMigrations}
+                disabled={!isConnected || isApplyingMigrations}
+                style={{ ...buttonStyle, opacity: !isConnected ? 0.6 : 1 }}
+              >
+                {isApplyingMigrations ? 'Applying...' : 'Run Migrations'}
+              </button>
+            </div>
+          )}
+
+          {migrationMessage && (
+            <div style={{
+              marginTop: 8,
+              padding: 8,
+              backgroundColor: '#f8f9fa',
+              border: '1px solid #dee2e6',
+              borderRadius: 4,
+              fontSize: 14,
+            }}>
+              {migrationMessage}
+            </div>
+          )}
+
+          {isConnected && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {migrationStatus.length === 0 ? (
+                <div style={{ color: '#6c757d' }}>No migrations found.</div>
+              ) : (
+                migrationStatus.map((migration) => (
+                  <div
+                    key={migration.id}
+                    style={{
+                      padding: 10,
+                      border: '1px solid #e9ecef',
+                      borderRadius: 4,
+                      backgroundColor: migration.appliedAt ? '#e2f0d9' : '#fff3cd',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{migration.name}</div>
+                      <div style={{ color: '#6c757d', fontSize: 14 }}>{migration.description}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: 14 }}>
+                      {migration.appliedAt ? (
+                        <span style={{ color: '#155724' }}>Applied</span>
+                      ) : (
+                        <span style={{ color: '#856404' }}>Pending</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
