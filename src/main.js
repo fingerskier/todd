@@ -55,6 +55,18 @@ const setAppMenu = (mainWindow) => {
 
   const template = [
     {
+      label: 'System',
+      submenu: [
+        {
+          label: 'Restart',
+          click: () => {
+            app.relaunch();
+            app.exit(0);
+          },
+        },
+      ],
+    },
+    {
       label: 'View',
       submenu: [
         {
@@ -74,6 +86,20 @@ const setAppMenu = (mainWindow) => {
 
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
+};
+
+const autoConnectFromStore = async () => {
+  const savedConfig = store.get('todd:dbConfig');
+
+  if (!savedConfig) {
+    return;
+  }
+
+  const result = await db.connect(savedConfig);
+
+  if (!result.success) {
+    console.error('Failed to auto-connect to database:', result.message);
+  }
 };
 
 const createWindow = () => {
@@ -118,7 +144,8 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await autoConnectFromStore();
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the

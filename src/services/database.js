@@ -8,19 +8,27 @@ function ensureConnected() {
   }
 }
 
+function buildPoolConfig(config) {
+  if (config?.connectionType === 'connectionString' && config.connectionString) {
+    return { connectionString: config.connectionString };
+  }
+
+  return {
+    host: config.host,
+    port: config.port,
+    database: config.database,
+    user: config.user,
+    password: config.password,
+  };
+}
+
 export async function connect(config) {
   try {
     if (pool) {
       await pool.end();
     }
 
-    pool = new Pool({
-      host: config.host,
-      port: config.port,
-      database: config.database,
-      user: config.user,
-      password: config.password,
-    });
+    pool = new Pool(buildPoolConfig(config));
 
     // Test the connection
     const client = await pool.connect();
@@ -66,13 +74,7 @@ export async function withClient(callback) {
 
 export async function testConnection(config) {
   try {
-    const testPool = new Pool({
-      host: config.host,
-      port: config.port,
-      database: config.database,
-      user: config.user,
-      password: config.password,
-    });
+    const testPool = new Pool(buildPoolConfig(config));
 
     const client = await testPool.connect();
     client.release();
