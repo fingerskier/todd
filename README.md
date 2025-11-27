@@ -40,7 +40,7 @@ Use `electron-store` to persist application settings.
 * Initial data
   * timestamped logs
   * key/value states
-  * graph (node-edge) data
+  * graph (nodes & edges) data
   * vector store {type:log|kv|graph, id, vector(384)}
 * Google gemini-node and gemmaEmbedder **local** models
 * Base UX

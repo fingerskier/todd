@@ -35,14 +35,22 @@ export const migrations = [
       `);
 
       await client.query(`
-        CREATE TABLE IF NOT EXISTS graph (
-          id SERIAL PRIMARY KEY,
-          source TEXT NOT NULL,
-          target TEXT NOT NULL,
-          weight NUMERIC,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
+        CREATE TABLE IF NOT EXISTS nodes (
+          id SERIAL PRIMARY KEY,  -- Unique identifier for each node
+          label TEXT,             -- Optional: A label or type for the node
+          properties JSONB        -- Optional: Flexible storage for node properties (e.g., name, age);
       `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS edges (
+          id SERIAL PRIMARY KEY,  -- Unique identifier for each edge
+          source_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,  -- Reference to the source node
+          target_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,  -- Reference to the target node
+          label TEXT,             -- Optional: A label or type for the edge (e.g., 'friend', 'parent')
+          properties JSONB,       -- Optional: Flexible storage for edge properties (e.g., weight, since)
+          directed BOOLEAN DEFAULT TRUE  -- Optional: Indicates if the edge is directed (true) or undirected (false)
+        );
+    `);
 
       await client.query(`
         CREATE TABLE IF NOT EXISTS vectors (
