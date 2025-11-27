@@ -108,7 +108,7 @@ const createWindow = () => {
   setAppMenu(mainWindow);
 
   const shouldOpenDevTools =
-    process.env.OPEN_DEVTOOLS === 'true' || process.env.NODE_ENV === 'development';
+    process.env.OPEN_DEVTOOLS === 'true';// || process.env.NODE_ENV === 'development';
 
   if (shouldOpenDevTools) {
     mainWindow.webContents.openDevTools();
