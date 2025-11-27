@@ -171,3 +171,13 @@ ipcMain.handle('db:migrations:status', async () => {
 ipcMain.handle('db:migrations:apply', async () => {
   return await applyPendingMigrations();
 });
+
+// Database config IPC handlers
+ipcMain.handle('db:config:get', () => {
+  return store.get('todd:dbConfig') ?? null;
+});
+
+ipcMain.handle('db:config:set', (_event, config) => {
+  store.set('todd:dbConfig', config);
+  return config;
+});

@@ -1,13 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
+const DEFAULT_CONFIG = {
+  host: 'localhost',
+  port: 5432,
+  database: '',
+  user: '',
+  password: '',
+};
+
+const normalizeConfig = (value) => {
+  const port = value?.port;
+  const normalizedPort =
+    typeof port === 'number'
+      ? port
+      : port
+        ? Number.parseInt(port, 10) || ''
+        : DEFAULT_CONFIG.port;
+
+  return {
+    ...DEFAULT_CONFIG,
+    ...value,
+    port: normalizedPort ?? DEFAULT_CONFIG.port,
+  };
+};
+
 export default function Settings() {
-  const [config, setConfig] = useState({
-    host: 'localhost',
-    port: 5432,
-    database: '',
-    user: '',
-    password: '',
-  });
+  const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [isConnected, setIsConnected] = useState(false);
   const [message, setMessage] = useState('');
   const [testMessage, setTestMessage] = useState('');
@@ -16,12 +34,15 @@ export default function Settings() {
   const [isApplyingMigrations, setIsApplyingMigrations] = useState(false);
 
   useEffect(() => {
-    checkConnection();
-    // Load saved config from localStorage
-    const saved = localStorage.getItem('dbConfig');
-    if (saved) {
-      setConfig(JSON.parse(saved));
-    }
+    const initialize = async () => {
+      await checkConnection();
+      const saved = await window.api.database.getConfig();
+      if (saved) {
+        setConfig(normalizeConfig(saved));
+      }
+    };
+
+    initialize();
   }, []);
 
   useEffect(() => {
@@ -56,7 +77,9 @@ export default function Settings() {
     const result = await window.api.database.connect(config);
     setMessage(result.success ? '✓ ' + result.message : '✗ ' + result.message);
     if (result.success) {
-      localStorage.setItem('dbConfig', JSON.stringify(config));
+      const normalized = normalizeConfig(config);
+      setConfig(normalized);
+      await window.api.database.setConfig(normalized);
       setIsConnected(true);
     }
   };
