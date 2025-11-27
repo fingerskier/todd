@@ -14,9 +14,21 @@ Settings that are prefixed `todd:` are related to the app itself
 * 
 
 
+## Architecture
+* Electron + React + Vite
+  * IPC between main and renderer
+  * Menu system (top bar and context menus)
+* Postgres DB backend
+* Google Gemini local models for LLM and embedding
+
+
 ## Features Under Construction
 * Postegres DB connection
-* Database migration manager
+* Dashboard
+  * Status of local models
+  * Database stats
+  * Recent activity/logs
+* Database migration management page
 * Initial data
   * timestamped logs
   * key/value states
