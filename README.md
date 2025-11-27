@@ -53,3 +53,8 @@ Settings that are prefixed `todd:` are related to the app itself
 
 
 ## Proposed Features
+
+
+## Claude Stuff
+* Goto `\Users\YOURUSERNAME\.claude-worktrees\todd\WORKTREENAME`
+* Goto your working directory
