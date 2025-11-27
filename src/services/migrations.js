@@ -57,8 +57,8 @@ export const migrations = [
       `);
       console.log('Created edges table', res4);
 
-      let res5 = await client.query('CREATE EXTENSION IF NOT EXISTS vector');
-      console.log('Ensured vector extension', res5);
+      // let res5 = await client.query('CREATE EXTENSION IF NOT EXISTS vector');
+      // console.log('Ensured vector extension', res5);
 
       let res6 = await client.query(`
         CREATE TABLE IF NOT EXISTS vectors (
