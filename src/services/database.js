@@ -23,19 +23,30 @@ function buildPoolConfig(config) {
 }
 
 export async function connect(config) {
+  let newPool;
   try {
     if (pool) {
       await pool.end();
     }
 
-    pool = new Pool(buildPoolConfig(config));
+    newPool = new Pool(buildPoolConfig(config));
 
     // Test the connection
-    const client = await pool.connect();
+    const client = await newPool.connect();
     client.release();
 
+    pool = newPool;
     return { success: true, message: 'Connected successfully' };
   } catch (error) {
+    if (newPool) {
+      try {
+        await newPool.end();
+      } catch (_) {
+        // ignore cleanup errors
+      }
+    }
+
+    pool = null;
     return { success: false, message: error.message };
   }
 }
