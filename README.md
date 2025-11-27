@@ -2,6 +2,11 @@
 A desktop digital twin.
 
 
+## Special Settings
+Settings that are prefixed `todd:` are related to the app itself
+* `todd:windowX`
+
+
 ## Features Under Constructions
 * Postegres DB connection
 * Database migration manager
