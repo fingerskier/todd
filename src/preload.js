@@ -11,4 +11,11 @@ contextBridge.exposeInMainWorld('api', {
     testConnection: (config) => ipcRenderer.invoke('db:testConnection', config),
     isConnected: () => ipcRenderer.invoke('db:isConnected'),
   },
+  navigation: {
+    onNavigate: (callback) => {
+      const subscription = (_event, path) => callback(path);
+      ipcRenderer.on('navigate', subscription);
+      return () => ipcRenderer.removeListener('navigate', subscription);
+    },
+  },
 });
