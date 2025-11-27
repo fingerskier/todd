@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('api', {
     query: (text, params) => ipcRenderer.invoke('db:query', text, params),
     testConnection: (config) => ipcRenderer.invoke('db:testConnection', config),
     isConnected: () => ipcRenderer.invoke('db:isConnected'),
+    getConfig: () => ipcRenderer.invoke('db:config:get'),
+    setConfig: (config) => ipcRenderer.invoke('db:config:set', config),
   },
   migrations: {
     status: () => ipcRenderer.invoke('db:migrations:status'),
