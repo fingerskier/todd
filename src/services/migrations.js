@@ -40,10 +40,11 @@ export const migrations = [
       `);
 
       await client.exec(`
+        -- Turso doesn't support CASCADEs yet...
         CREATE TABLE IF NOT EXISTS edges (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          source_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
-          target_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
+          source_id INTEGER REFERENCES nodes(id)-- ON DELETE CASCADE,
+          target_id INTEGER REFERENCES nodes(id)-- ON DELETE CASCADE,
           label TEXT,
           properties TEXT,
           directed BOOLEAN DEFAULT TRUE

@@ -88,8 +88,8 @@ export default function Logs() {
       setEditingId(null);
     } else {
       const result = await window.api.database.query(
-        'INSERT INTO logs (level, message, metadata) VALUES (?, ?, ?)',
-        [form.level, form.message, metadataPayload],
+        'INSERT INTO logs (message, metadata) VALUES (?, ?)',
+        [form.message, metadataPayload],
       );
       if (!result.success) {
         setStatus(result.message);

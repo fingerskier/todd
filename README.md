@@ -12,18 +12,19 @@ Use `electron-store` to persist application settings.
   * `windowWidth` - The width of the window
   * `windowHeight` - The height of the window
 * Database setup
-  * `dbHost` - The hostname of the Postgres database
-  * `dbPort` - The port of the Postgres database
-  * `dbName` - The name of the Postgres database
-  * `dbUser` - The username for the Postgres database
-  * `dbPassword` - The password for the Postgres database
+  * `dbHost` - The hostname of the libsql database
+  * `dbPort` - The port of the libsql database
+  * `dbName` - The name of the libsql database
+  * `dbUser` - The username for the libsql database
+  * `dbPassword` - The password for the libsql database
 
 
 ## Architecture
 * Electron + React + Vite
   * IPC between main and renderer
   * Menu system (top bar and context menus)
-* Postgres DB backend
+* libsql/sqlite DB backend
+  * optional Turso cloud sync
 * Google Gemini local models for LLM and embedding
 
 ## Local Gemini / Gemma models
