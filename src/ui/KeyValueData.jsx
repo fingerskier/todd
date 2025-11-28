@@ -32,7 +32,11 @@ export default function KeyValueData() {
       'SELECT key, value, updated_at FROM kv ORDER BY key ASC',
     );
     if (result.success) {
-      setRecords(result.data);
+      const parsedRows = (result.data ?? []).map((row) => ({
+        ...row,
+        value: row.value ? JSON.parse(row.value) : null,
+      }));
+      setRecords(parsedRows);
     } else {
       setStatus(result.message);
       setRecords([]);
@@ -70,10 +74,12 @@ export default function KeyValueData() {
       return;
     }
 
+    const valuePayload = parsedValue !== null ? JSON.stringify(parsedValue) : null;
+
     if (editingKey) {
       const result = await window.api.database.query(
-        'UPDATE kv SET value = $1, updated_at = NOW() WHERE key = $2 RETURNING key',
-        [parsedValue, editingKey],
+        'UPDATE kv SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?',
+        [valuePayload, editingKey],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -82,8 +88,8 @@ export default function KeyValueData() {
       setEditingKey(null);
     } else {
       const result = await window.api.database.query(
-        'INSERT INTO kv (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW() RETURNING key',
-        [form.key, parsedValue],
+        'INSERT INTO kv (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP',
+        [form.key, valuePayload],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -102,7 +108,7 @@ export default function KeyValueData() {
 
   const handleDelete = async (key) => {
     setStatus('');
-    const result = await window.api.database.query('DELETE FROM kv WHERE key = $1', [key]);
+    const result = await window.api.database.query('DELETE FROM kv WHERE key = ?', [key]);
     if (!result.success) {
       setStatus(result.message);
       return;

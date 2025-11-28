@@ -101,11 +101,7 @@ const setAppMenu = (mainWindow) => {
 };
 
 const autoConnectFromStore = async () => {
-  const savedConfig = store.get('todd:dbConfig');
-
-  if (!savedConfig) {
-    return;
-  }
+  const savedConfig = store.get('todd:dbConfig') ?? {};
 
   const result = await db.connect(savedConfig);
 

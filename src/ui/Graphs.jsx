@@ -29,6 +29,16 @@ export default function Graphs() {
   const resetNodeForm = () => setNodeForm({ label: '', properties: '' });
   const resetEdgeForm = () => setEdgeForm({ sourceId: '', targetId: '', label: '', properties: '', directed: true });
 
+  const parseRowJson = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      setStatus('Stored JSON is invalid: ' + error.message);
+      return null;
+    }
+  };
+
   const refreshGraphData = async () => {
     setIsLoading(true);
     setStatus('');
@@ -45,11 +55,23 @@ export default function Graphs() {
       setEdges([]);
     } else if (!edgeResult.success) {
       setStatus(edgeResult.message);
-      setNodes(nodeResult.data ?? []);
+      const parsedNodes = (nodeResult.data ?? []).map((node) => ({
+        ...node,
+        properties: parseRowJson(node.properties),
+      }));
+      setNodes(parsedNodes);
       setEdges([]);
     } else {
-      setNodes(nodeResult.data ?? []);
-      setEdges(edgeResult.data ?? []);
+      const parsedNodes = (nodeResult.data ?? []).map((node) => ({
+        ...node,
+        properties: parseRowJson(node.properties),
+      }));
+      const parsedEdges = (edgeResult.data ?? []).map((edge) => ({
+        ...edge,
+        properties: parseRowJson(edge.properties),
+      }));
+      setNodes(parsedNodes);
+      setEdges(parsedEdges);
     }
 
     setIsLoading(false);
@@ -86,9 +108,10 @@ export default function Graphs() {
     }
 
     if (editingNodeId) {
+      const propertiesPayload = properties ? JSON.stringify(properties) : null;
       const result = await window.api.database.query(
-        'UPDATE nodes SET label = $1, properties = $2 WHERE id = $3 RETURNING id',
-        [nodeForm.label || null, properties, editingNodeId],
+        'UPDATE nodes SET label = ?, properties = ? WHERE id = ?',
+        [nodeForm.label || null, propertiesPayload, editingNodeId],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -96,9 +119,10 @@ export default function Graphs() {
       }
       setEditingNodeId(null);
     } else {
+      const propertiesPayload = properties ? JSON.stringify(properties) : null;
       const result = await window.api.database.query(
-        'INSERT INTO nodes (label, properties) VALUES ($1, $2) RETURNING id',
-        [nodeForm.label || null, properties],
+        'INSERT INTO nodes (label, properties) VALUES (?, ?)',
+        [nodeForm.label || null, propertiesPayload],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -131,18 +155,18 @@ export default function Graphs() {
       return;
     }
 
-    const params = [
-      Number(edgeForm.sourceId),
-      Number(edgeForm.targetId),
-      edgeForm.label || null,
-      properties,
-      edgeForm.directed,
-    ];
-
     if (editingEdgeId) {
+      const propertiesPayload = properties ? JSON.stringify(properties) : null;
       const result = await window.api.database.query(
-        'UPDATE edges SET source_id = $1, target_id = $2, label = $3, properties = $4, directed = $5 WHERE id = $6 RETURNING id',
-        [...params, editingEdgeId],
+        'UPDATE edges SET source_id = ?, target_id = ?, label = ?, properties = ?, directed = ? WHERE id = ?',
+        [
+          Number(edgeForm.sourceId),
+          Number(edgeForm.targetId),
+          edgeForm.label || null,
+          propertiesPayload,
+          edgeForm.directed,
+          editingEdgeId,
+        ],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -150,9 +174,16 @@ export default function Graphs() {
       }
       setEditingEdgeId(null);
     } else {
+      const propertiesPayload = properties ? JSON.stringify(properties) : null;
       const result = await window.api.database.query(
-        'INSERT INTO edges (source_id, target_id, label, properties, directed) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        params,
+        'INSERT INTO edges (source_id, target_id, label, properties, directed) VALUES (?, ?, ?, ?, ?)',
+        [
+          Number(edgeForm.sourceId),
+          Number(edgeForm.targetId),
+          edgeForm.label || null,
+          propertiesPayload,
+          edgeForm.directed,
+        ],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -185,7 +216,7 @@ export default function Graphs() {
 
   const handleNodeDelete = async (id) => {
     setStatus('');
-    const result = await window.api.database.query('DELETE FROM nodes WHERE id = $1', [id]);
+    const result = await window.api.database.query('DELETE FROM nodes WHERE id = ?', [id]);
     if (!result.success) {
       setStatus(result.message);
       return;
@@ -199,7 +230,7 @@ export default function Graphs() {
 
   const handleEdgeDelete = async (id) => {
     setStatus('');
-    const result = await window.api.database.query('DELETE FROM edges WHERE id = $1', [id]);
+    const result = await window.api.database.query('DELETE FROM edges WHERE id = ?', [id]);
     if (!result.success) {
       setStatus(result.message);
       return;
