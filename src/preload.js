@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('api', {
     isConnected: () => ipcRenderer.invoke('db:isConnected'),
     getConfig: () => ipcRenderer.invoke('db:config:get'),
     setConfig: (config) => ipcRenderer.invoke('db:config:set', config),
+    getPath: () => ipcRenderer.invoke('db:path'),
   },
   migrations: {
     status: () => ipcRenderer.invoke('db:migrations:status'),
