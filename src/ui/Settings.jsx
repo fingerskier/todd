@@ -1,34 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
 const DEFAULT_CONFIG = {
-  connectionType: 'standard',
-  host: 'localhost',
-  port: 5432,
-  database: '',
-  user: '',
-  password: '',
-  connectionString: '',
+  url: '',
+  authToken: '',
+  sync: 'full',
 };
 
-const normalizeConfig = (value) => {
-  const port = value?.port;
-  const normalizedPort =
-    typeof port === 'number'
-      ? port
-      : port
-        ? Number.parseInt(port, 10) || ''
-        : DEFAULT_CONFIG.port;
-
-  const validConnectionType =
-    value?.connectionType === 'connectionString' ? 'connectionString' : 'standard';
-
-  return {
-    ...DEFAULT_CONFIG,
-    ...value,
-    port: normalizedPort ?? DEFAULT_CONFIG.port,
-    connectionType: validConnectionType,
-  };
-};
+const normalizeConfig = (value) => ({
+  url: value?.url ?? DEFAULT_CONFIG.url,
+  authToken: value?.authToken ?? DEFAULT_CONFIG.authToken,
+  sync: value?.sync || DEFAULT_CONFIG.sync,
+});
 
 export default function Settings() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
@@ -69,7 +51,7 @@ export default function Settings() {
     const { name, value } = e.target;
     setConfig((prev) => ({
       ...prev,
-      [name]: name === 'port' ? parseInt(value) || '' : value,
+      [name]: value,
     }));
   };
 
@@ -137,124 +119,54 @@ export default function Settings() {
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <h2>PostgreSQL Connection</h2>
-
-        <div style={{ marginTop: 12, display: 'flex', gap: 16 }}>
-          <label style={{ fontWeight: 500 }}>
-            <input
-              type="radio"
-              name="connectionType"
-              value="standard"
-              checked={config.connectionType === 'standard'}
-              onChange={handleChange}
-              disabled={isConnected}
-              style={{ marginRight: 6 }}
-            />
-            Host, port, database, user, password
-          </label>
-          <label style={{ fontWeight: 500 }}>
-            <input
-              type="radio"
-              name="connectionType"
-              value="connectionString"
-              checked={config.connectionType === 'connectionString'}
-              onChange={handleChange}
-              disabled={isConnected}
-              style={{ marginRight: 6 }}
-            />
-            Single connection string
-          </label>
-        </div>
+        <h2>Embedded Database</h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
-          {config.connectionType === 'connectionString' ? (
-            <div>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                Connection string
-              </label>
-              <input
-                type="text"
-                name="connectionString"
-                value={config.connectionString}
-                onChange={handleChange}
-                disabled={isConnected}
-                style={inputStyle}
-                placeholder="postgres://user:password@host:port/database"
-              />
-            </div>
-          ) : (
-            <>
-              <div>
-                <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                  Host
-                </label>
-                <input
-                  type="text"
-                  name="host"
-                  value={config.host}
-                  onChange={handleChange}
-                  disabled={isConnected}
-                  style={inputStyle}
-                />
-              </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+              Sync URL (optional)
+            </label>
+            <input
+              type="text"
+              name="url"
+              value={config.url}
+              onChange={handleChange}
+              disabled={isConnected}
+              style={inputStyle}
+              placeholder="libsql://example.turso.io"
+            />
+          </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                  Port
-                </label>
-                <input
-                  type="number"
-                  name="port"
-                  value={config.port}
-                  onChange={handleChange}
-                  disabled={isConnected}
-                  style={inputStyle}
-                />
-              </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+              Auth Token (optional)
+            </label>
+            <input
+              type="text"
+              name="authToken"
+              value={config.authToken}
+              onChange={handleChange}
+              disabled={isConnected}
+              style={inputStyle}
+              placeholder="Bearer token for sync"
+            />
+          </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                  Database
-                </label>
-                <input
-                  type="text"
-                  name="database"
-                  value={config.database}
-                  onChange={handleChange}
-                  disabled={isConnected}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                  User
-                </label>
-                <input
-                  type="text"
-                  name="user"
-                  value={config.user}
-                  onChange={handleChange}
-                  disabled={isConnected}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={config.password}
-                  onChange={handleChange}
-                  disabled={isConnected}
-                  style={inputStyle}
-                />
-              </div>
-            </>
-          )}
+          <div>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+              Sync Mode
+            </label>
+            <select
+              name="sync"
+              value={config.sync}
+              onChange={handleChange}
+              disabled={isConnected}
+              style={{ ...inputStyle, height: 38 }}
+            >
+              <option value="full">Full</option>
+              <option value="">Disabled</option>
+            </select>
+          </div>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button

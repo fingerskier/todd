@@ -1,61 +1,90 @@
-import { Pool } from 'pg';
+import { app } from 'electron';
+import path from 'node:path';
+import { connect as connectDatabase } from '@tursodatabase/database';
 
-let pool = null;
+let db = null;
+let currentPath = null;
 
 function ensureConnected() {
-  if (!pool) {
+  if (!db) {
     throw new Error('Database not connected');
   }
 }
 
-function buildPoolConfig(config) {
-  if (config?.connectionType === 'connectionString' && config.connectionString) {
-    return { connectionString: config.connectionString };
+function resolveDatabasePath(config) {
+  if (config?.path) {
+    return config.path;
   }
 
+  const base = app.getPath('userData');
+  return path.join(base, 'todd.db');
+}
+
+function buildOptions(config = {}) {
+  const options = {};
+
+  if (config.url) {
+    options.syncUrl = config.url;
+  }
+
+  if (config.authToken) {
+    options.authToken = config.authToken;
+  }
+
+  if (config.sync) {
+    options.sync = config.sync;
+  }
+
+  return options;
+}
+
+function createClientWrapper() {
   return {
-    host: config.host,
-    port: config.port,
-    database: config.database,
-    user: config.user,
-    password: config.password,
+    exec: (sql) => db.exec(sql),
+    query: async (sql, params = []) => {
+      const statement = db.prepare(sql);
+      const hasReturning = /\bRETURNING\b/i.test(sql);
+      const isSelect = /^\s*SELECT/i.test(sql);
+
+      try {
+        if (isSelect || hasReturning) {
+          const rows = await statement.all(...params);
+          return { rows };
+        }
+
+        const result = await statement.run(...params);
+        return { rows: [], changes: result.changes, lastInsertRowid: result.lastInsertRowid };
+      } finally {
+        statement.close();
+      }
+    },
   };
 }
 
-export async function connect(config) {
-  let newPool;
+export async function connect(config = {}) {
   try {
-    if (pool) {
-      await pool.end();
+    if (db) {
+      await db.close();
     }
 
-    newPool = new Pool(buildPoolConfig(config));
+    currentPath = resolveDatabasePath(config);
+    db = await connectDatabase(currentPath, buildOptions(config));
+    await db.exec('PRAGMA foreign_keys = ON;');
 
-    // Test the connection
-    const client = await newPool.connect();
-    client.release();
-
-    pool = newPool;
-    return { success: true, message: 'Connected successfully' };
+    return { success: true, message: 'Connected to embedded database', path: currentPath };
   } catch (error) {
-    if (newPool) {
-      try {
-        await newPool.end();
-      } catch (_) {
-        // ignore cleanup errors
-      }
-    }
-
-    pool = null;
+    db = null;
+    currentPath = null;
     return { success: false, message: error.message };
   }
 }
 
 export async function disconnect() {
   try {
-    if (pool) {
-      await pool.end();
-      pool = null;
+    if (db) {
+      await db.close();
+      db = null;
+      currentPath = null;
     }
     return { success: true, message: 'Disconnected successfully' };
   } catch (error) {
@@ -63,11 +92,18 @@ export async function disconnect() {
   }
 }
 
-export async function query(text, params) {
+export async function query(text, params = []) {
   try {
     ensureConnected();
-    const result = await pool.query(text, params);
-    return { success: true, data: result.rows };
+    const client = createClientWrapper();
+    const isSelect = /^\s*SELECT/i.test(text) || /\bRETURNING\b/i.test(text);
+    const result = await client.query(text, params);
+
+    if (isSelect) {
+      return { success: true, data: result.rows };
+    }
+
+    return { success: true, data: result };
   } catch (error) {
     return { success: false, message: error.message };
   }
@@ -75,21 +111,16 @@ export async function query(text, params) {
 
 export async function withClient(callback) {
   ensureConnected();
-  const client = await pool.connect();
-  try {
-    return await callback(client);
-  } finally {
-    client.release();
-  }
+  const client = createClientWrapper();
+  return callback(client);
 }
 
-export async function testConnection(config) {
+export async function testConnection(config = {}) {
   try {
-    const testPool = new Pool(buildPoolConfig(config));
-
-    const client = await testPool.connect();
-    client.release();
-    await testPool.end();
+    const testPath = resolveDatabasePath(config);
+    const testDb = await connectDatabase(testPath, buildOptions(config));
+    await testDb.exec('PRAGMA foreign_keys = ON;');
+    await testDb.close();
 
     return { success: true, message: 'Connection test successful' };
   } catch (error) {
@@ -98,5 +129,9 @@ export async function testConnection(config) {
 }
 
 export function isConnected() {
-  return pool !== null;
+  return db !== null;
+}
+
+export function getCurrentPath() {
+  return currentPath;
 }
