@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import './styles/shared.css';
 import Home from './Home';
 import Settings from './Settings';
 import Dashboard from './Dashboard';
@@ -21,7 +22,7 @@ function AppRoutes() {
   }, [navigate]);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+    <div className="app-shell">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />

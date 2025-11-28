@@ -15,6 +15,7 @@ const normalizeConfig = (value) => ({
 export default function Settings() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [isConnected, setIsConnected] = useState(false);
+  const [dbPath, setDbPath] = useState('');
   const [message, setMessage] = useState('');
   const [testMessage, setTestMessage] = useState('');
   const [migrationStatus, setMigrationStatus] = useState([]);
@@ -48,6 +49,13 @@ export default function Settings() {
   const checkConnection = async () => {
     const connected = await window.api.database.isConnected();
     setIsConnected(connected);
+
+    if (connected) {
+      const path = await window.api.database.getPath();
+      setDbPath(path || '');
+    } else {
+      setDbPath('');
+    }
   };
 
   const handleChange = (e) => {
@@ -71,6 +79,7 @@ export default function Settings() {
     if (result.success) {
       const normalized = normalizeConfig(config);
       setConfig(normalized);
+      setDbPath(result.path || (await window.api.database.getPath()) || '');
       await window.api.database.setConfig(normalized);
       setIsConnected(true);
     }
@@ -82,6 +91,7 @@ export default function Settings() {
     setMessage(result.success ? '✓ ' + result.message : '✗ ' + result.message);
     if (result.success) {
       setIsConnected(false);
+      setDbPath('');
     }
   };
 
@@ -127,196 +137,153 @@ export default function Settings() {
   };
 
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', padding: 24 }}>
+    <div className="page">
       <h1>Database Settings</h1>
 
-      <div style={{
-        marginTop: 20,
-        padding: 12,
-        backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
-        border: `1px solid ${isConnected ? '#c3e6cb' : '#f5c6cb'}`,
-        borderRadius: 4,
-        color: isConnected ? '#155724' : '#721c24',
-      }}>
-        Status: {isConnected ? 'Connected' : 'Disconnected'}
+      <div
+        className={`status-banner ${
+          isConnected ? 'status-banner--connected' : 'status-banner--disconnected'
+        }`}
+      >
+        <div>Status: {isConnected ? 'Connected' : 'Disconnected'}</div>
+        <div className="status-detail">
+          <span>Database file:</span>
+          <code className="code-pill">{dbPath || 'Not available'}</code>
+        </div>
       </div>
 
-      <div style={{ marginTop: 24 }}>
-        <h2>Embedded Database</h2>
+      <div className="section">
+        <h2 className="section-title">Embedded Database</h2>
+        <p className="section-subtitle">
+          Configure the embedded database and optional sync settings.
+        </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+        <div className="card">
+          <div className="form-grid">
+            <div className="form-label">Database file</div>
+            <div className="form-static">
+              <code className="code-pill">{dbPath || 'Not connected'}</code>
+            </div>
+
+            <label className="form-label" htmlFor="url">
               Sync URL (optional)
             </label>
             <input
+              className="form-control"
               type="text"
+              id="url"
               name="url"
               value={config.url}
               onChange={handleChange}
               disabled={isConnected}
-              style={inputStyle}
               placeholder="libsql://example.turso.io"
             />
-          </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+            <label className="form-label" htmlFor="authToken">
               Auth Token (optional)
             </label>
             <input
+              className="form-control"
               type="text"
+              id="authToken"
               name="authToken"
               value={config.authToken}
               onChange={handleChange}
               disabled={isConnected}
-              style={inputStyle}
               placeholder="Bearer token for sync"
             />
-          </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>
+            <label className="form-label" htmlFor="sync">
               Sync Mode
             </label>
             <select
+              className="form-control"
+              id="sync"
               name="sync"
               value={config.sync}
               onChange={handleChange}
               disabled={isConnected}
-              style={{ ...inputStyle, height: 38 }}
             >
               <option value="full">Full</option>
               <option value="">Disabled</option>
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div className="button-row">
             <button
+              className="btn btn-secondary"
               onClick={handleTestConnection}
               disabled={isConnected}
-              style={buttonStyle}
             >
               Test Connection
             </button>
             {!isConnected ? (
-              <button
-                onClick={handleConnect}
-                style={{ ...buttonStyle, backgroundColor: '#28a745', borderColor: '#28a745' }}
-              >
+              <button className="btn btn-success" onClick={handleConnect}>
                 Connect
               </button>
             ) : (
-              <button
-                onClick={handleDisconnect}
-                style={{ ...buttonStyle, backgroundColor: '#dc3545', borderColor: '#dc3545' }}
-              >
+              <button className="btn btn-danger" onClick={handleDisconnect}>
                 Disconnect
               </button>
             )}
           </div>
 
-          {testMessage && (
-            <div style={{
-              marginTop: 8,
-              padding: 8,
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: 4,
-              fontSize: 14,
-            }}>
-              {testMessage}
-            </div>
-          )}
+          {testMessage && <div className="notice">{testMessage}</div>}
 
-          {message && (
-            <div style={{
-              marginTop: 8,
-              padding: 8,
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: 4,
-              fontSize: 14,
-            }}>
-              {message}
-            </div>
-          )}
+          {message && <div className="notice">{message}</div>}
         </div>
       </div>
 
-      <div style={{ marginTop: 32 }}>
-        <h2>Database Migrations</h2>
-        <p style={{ color: '#6c757d', marginTop: 8 }}>
+      <div className="section">
+        <h2 className="section-title">Database Migrations</h2>
+        <p className="section-subtitle">
           Track and run schema migrations stored in the application.
         </p>
 
-        <div style={{
-          marginTop: 12,
-          padding: 12,
-          backgroundColor: '#fff',
-          border: '1px solid #dee2e6',
-          borderRadius: 4,
-          maxWidth: 600,
-        }}>
+        <div className="card">
           {!isConnected && (
-            <div style={{ color: '#721c24', marginBottom: 8 }}>
-              Connect to the database to view and apply migrations.
-            </div>
+            <div className="notice">Connect to the database to view and apply migrations.</div>
           )}
 
           {isConnected && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontWeight: 500 }}>Pending migrations: {migrationStatus.filter((m) => !m.appliedAt).length}</div>
+            <div className="card-row">
+              <div className="text-strong">
+                Pending migrations: {migrationStatus.filter((m) => !m.appliedAt).length}
+              </div>
               <button
+                className="btn"
                 onClick={handleApplyMigrations}
                 disabled={!isConnected || isApplyingMigrations}
-                style={{ ...buttonStyle, opacity: !isConnected ? 0.6 : 1 }}
               >
                 {isApplyingMigrations ? 'Applying...' : 'Run Migrations'}
               </button>
             </div>
           )}
 
-          {migrationMessage && (
-            <div style={{
-              marginTop: 8,
-              padding: 8,
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: 4,
-              fontSize: 14,
-            }}>
-              {migrationMessage}
-            </div>
-          )}
+          {migrationMessage && <div className="notice">{migrationMessage}</div>}
 
           {isConnected && (
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="migration-list">
               {migrationStatus.length === 0 ? (
-                <div style={{ color: '#6c757d' }}>No migrations found.</div>
+                <div className="notice notice-muted">No migrations found.</div>
               ) : (
                 migrationStatus.map((migration) => (
                   <div
                     key={migration.id}
-                    style={{
-                      padding: 10,
-                      border: '1px solid #e9ecef',
-                      borderRadius: 4,
-                      backgroundColor: migration.appliedAt ? '#e2f0d9' : '#fff3cd',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                    }}
+                    className={`migration-item ${migration.appliedAt ? 'applied' : 'pending'}`}
                   >
                     <div>
-                      <div style={{ fontWeight: 600 }}>{migration.name}</div>
-                      <div style={{ color: '#6c757d', fontSize: 14 }}>{migration.description}</div>
+                      <div className="text-strong">{migration.name}</div>
+                      <div className="text-muted text-small">{migration.description}</div>
                     </div>
-                    <div style={{ textAlign: 'right', fontSize: 14 }}>
-                      {migration.appliedAt ? (
-                        <span style={{ color: '#155724' }}>Applied</span>
-                      ) : (
-                        <span style={{ color: '#856404' }}>Pending</span>
-                      )}
+                    <div className="text-right">
+                      <span
+                        className={
+                          migration.appliedAt ? 'badge badge-success' : 'badge badge-warning'
+                        }
+                      >
+                        {migration.appliedAt ? 'Applied' : 'Pending'}
+                      </span>
                     </div>
                   </div>
                 ))
@@ -326,93 +293,43 @@ export default function Settings() {
         </div>
       </div>
 
-      <div style={{ marginTop: 32 }}>
-        <h2>Query</h2>
-        <p style={{ color: '#6c757d', marginTop: 8 }}>
+      <div className="section">
+        <h2 className="section-title">Query</h2>
+        <p className="section-subtitle">
           Run an arbitrary SQL query against the connected database.
         </p>
 
-        <div style={{
-          marginTop: 12,
-          padding: 12,
-          backgroundColor: '#fff',
-          border: '1px solid #dee2e6',
-          borderRadius: 4,
-          maxWidth: 800,
-        }}>
-          {!isConnected && (
-            <div style={{ color: '#721c24', marginBottom: 8 }}>
-              Connect to the database to run queries.
-            </div>
-          )}
+        <div className="card">
+          {!isConnected && <div className="notice">Connect to the database to run queries.</div>}
 
-          <textarea
-            value={queryText}
-            onChange={(e) => setQueryText(e.target.value)}
-            placeholder="SELECT * FROM table_name LIMIT 10;"
-            rows={5}
-            disabled={!isConnected}
-            style={{ ...inputStyle, width: '100%', resize: 'vertical', minHeight: 120 }}
-          />
-
-          <div style={{ display: 'flex', marginTop: 8 }}>
-            <button
-              onClick={handleRunQuery}
+          <div className="form-grid">
+            <label className="form-label" htmlFor="queryText">
+              SQL Query
+            </label>
+            <textarea
+              className="form-control textarea-control"
+              value={queryText}
+              id="queryText"
+              onChange={(e) => setQueryText(e.target.value)}
+              placeholder="SELECT * FROM table_name LIMIT 10;"
+              rows={5}
               disabled={!isConnected}
-              style={{ ...buttonStyle, opacity: !isConnected ? 0.6 : 1 }}
-            >
+            />
+          </div>
+
+          <div className="button-row">
+            <button className="btn" onClick={handleRunQuery} disabled={!isConnected}>
               Run Query
             </button>
           </div>
 
-          {queryMessage && (
-            <div style={{
-              marginTop: 8,
-              padding: 8,
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: 4,
-              fontSize: 14,
-            }}>
-              {queryMessage}
-            </div>
-          )}
+          {queryMessage && <div className="notice">{queryMessage}</div>}
 
           {queryResult !== null && (
-            <pre style={{
-              marginTop: 8,
-              padding: 12,
-              backgroundColor: '#0f172a',
-              color: '#e2e8f0',
-              borderRadius: 4,
-              overflowX: 'auto',
-              fontSize: 13,
-              lineHeight: 1.5,
-            }}>
-              {JSON.stringify(queryResult, null, 2)}
-            </pre>
+            <pre className="code-block">{JSON.stringify(queryResult, null, 2)}</pre>
           )}
         </div>
       </div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: '100%',
-  padding: 8,
-  border: '1px solid #ced4da',
-  borderRadius: 4,
-  fontSize: 14,
-};
-
-const buttonStyle = {
-  padding: '8px 16px',
-  backgroundColor: '#007bff',
-  color: 'white',
-  border: '1px solid #007bff',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: 14,
-  fontWeight: 500,
-};

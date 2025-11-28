@@ -198,6 +198,10 @@ ipcMain.handle('db:isConnected', () => {
   return db.isConnected();
 });
 
+ipcMain.handle('db:path', () => {
+  return db.getCurrentPath();
+});
+
 // Migration IPC handlers
 ipcMain.handle('db:migrations:status', async () => {
   return await getMigrationStatus();
