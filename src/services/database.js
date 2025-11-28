@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import path from 'node:path';
 import { connect as connectDatabase } from '@tursodatabase/database';
+import { handleVectorSideEffects } from './vectors.js';
 
 let db = null;
 let currentPath = null;
@@ -89,12 +90,22 @@ export async function query(text, params = []) {
     const client = createClientWrapper();
     const isSelect = /^\s*SELECT/i.test(text) || /\bRETURNING\b/i.test(text);
     const result = await client.query(text, params);
+    const response = isSelect
+      ? { success: true, data: result.rows }
+      : { success: true, data: result };
 
-    if (isSelect) {
-      return { success: true, data: result.rows };
+    if (!isSelect) {
+      try {
+        await handleVectorSideEffects(client, text, params, result);
+        response.vectorsUpdated = true;
+      } catch (vectorError) {
+        console.warn('Vector side effects failed:', vectorError);
+        response.vectorsUpdated = false;
+        response.vectorWarning = vectorError.message;
+      }
     }
 
-    return { success: true, data: result };
+    return response;
   } catch (error) {
     return { success: false, message: error.message };
   }
