@@ -260,7 +260,7 @@ export default function Graphs() {
                 value={nodeForm.properties}
                 onChange={(e) => setNodeForm({ ...nodeForm, properties: e.target.value })}
                 style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace' }}
-                placeholder="{ \"name\": \"payments\" }"
+                placeholder='{ "name": "payments" }'
               />
             </label>
           </div>
@@ -437,7 +437,7 @@ export default function Graphs() {
                 value={edgeForm.properties}
                 onChange={(e) => setEdgeForm({ ...edgeForm, properties: e.target.value })}
                 style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace' }}
-                placeholder="{ \"weight\": 0.8 }"
+                placeholder='{ "weight": 0.8 }'
               />
             </label>
           </div>

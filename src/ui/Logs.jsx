@@ -18,18 +18,18 @@ const inputStyle = {
 
 export default function Logs() {
   const [entries, setEntries] = useState([]);
-  const [form, setForm] = useState({ level: 'info', message: '', metadata: '' });
+  const [form, setForm] = useState({ message: '', metadata: '' });
   const [editingId, setEditingId] = useState(null);
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const resetForm = () => setForm({ level: 'info', message: '', metadata: '' });
+  const resetForm = () => setForm({ message: '', metadata: '' });
 
   const refreshLogs = async () => {
     setIsLoading(true);
     setStatus('');
     const result = await window.api.database.query(
-      'SELECT id, level, message, metadata, created_at FROM logs ORDER BY created_at DESC',
+      'SELECT id, message, metadata, created_at FROM logs ORDER BY created_at DESC',
     );
     if (result.success) {
       setEntries(result.data);
@@ -72,8 +72,8 @@ export default function Logs() {
 
     if (editingId) {
       const result = await window.api.database.query(
-        'UPDATE logs SET level = $1, message = $2, metadata = $3 WHERE id = $4 RETURNING id',
-        [form.level, form.message, metadata, editingId],
+        'UPDATE logs SET message = $1, metadata = $2 WHERE id = $3 RETURNING id',
+        [form.message, metadata, editingId],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -82,8 +82,8 @@ export default function Logs() {
       setEditingId(null);
     } else {
       const result = await window.api.database.query(
-        'INSERT INTO logs (level, message, metadata) VALUES ($1, $2, $3) RETURNING id',
-        [form.level, form.message, metadata],
+        'INSERT INTO logs (message, metadata) VALUES ($1, $2) RETURNING id',
+        [form.message, metadata],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -97,7 +97,6 @@ export default function Logs() {
 
   const handleEdit = (entry) => {
     setForm({
-      level: entry.level,
       message: entry.message,
       metadata: entry.metadata ? JSON.stringify(entry.metadata, null, 2) : '',
     });
@@ -152,18 +151,6 @@ export default function Logs() {
           <h2 style={{ marginTop: 0 }}>{editingId ? 'Edit log' : 'Add new log'}</h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <label>
-              <div style={{ marginBottom: 4, fontWeight: 600 }}>Level</div>
-              <select
-                value={form.level}
-                onChange={(e) => setForm({ ...form, level: e.target.value })}
-                style={{ ...inputStyle, height: 38 }}
-              >
-                <option value="info">Info</option>
-                <option value="warn">Warn</option>
-                <option value="error">Error</option>
-              </select>
-            </label>
             <label>
               <div style={{ marginBottom: 4, fontWeight: 600 }}>Message</div>
               <textarea
@@ -240,7 +227,7 @@ export default function Logs() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 700, color: '#0d6efd' }}>{entry.level.toUpperCase()}</div>
+                      <div style={{ fontWeight: 700, color: '#0d6efd' }}>INFO</div>
                       <div style={{ color: '#6c757d', fontSize: 13 }}>
                         Created: {new Date(entry.created_at).toLocaleString()}
                       </div>

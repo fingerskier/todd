@@ -18,7 +18,6 @@ export const migrations = [
       let res1 = await client.query(`
         CREATE TABLE IF NOT EXISTS logs (
           id SERIAL PRIMARY KEY,
-          level TEXT NOT NULL,
           message TEXT NOT NULL,
           metadata JSONB,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -59,6 +58,14 @@ export const migrations = [
 
       // let res5 = await client.query('CREATE EXTENSION IF NOT EXISTS vector');
       // console.log('Ensured vector extension', res5);
+
+      const vectorTypeRes = await client.query(`
+        SELECT typname, nspname
+        FROM pg_type t
+        JOIN pg_namespace n ON t.typnamespace = n.oid
+        WHERE typname = 'vector'
+      `);
+      console.log('Vector Type Info:', vectorTypeRes.rows);  // Should show [{ typname: 'vector', nspname: 'public' }]
 
       let res6 = await client.query(`
         CREATE TABLE IF NOT EXISTS vectors (
