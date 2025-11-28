@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import JsonEditor from './components/JsonEditor';
 
 const cardStyle = {
   backgroundColor: '#fff',
@@ -287,10 +288,9 @@ export default function Graphs() {
             </label>
             <label>
               <div style={{ marginBottom: 4, fontWeight: 600 }}>Properties (JSON)</div>
-              <textarea
+              <JsonEditor
                 value={nodeForm.properties}
-                onChange={(e) => setNodeForm({ ...nodeForm, properties: e.target.value })}
-                style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace' }}
+                onChange={(properties) => setNodeForm({ ...nodeForm, properties })}
                 placeholder='{ "name": "payments" }'
               />
             </label>
@@ -464,10 +464,9 @@ export default function Graphs() {
             </label>
             <label>
               <div style={{ marginBottom: 4, fontWeight: 600 }}>Properties (JSON)</div>
-              <textarea
+              <JsonEditor
                 value={edgeForm.properties}
-                onChange={(e) => setEdgeForm({ ...edgeForm, properties: e.target.value })}
-                style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace' }}
+                onChange={(properties) => setEdgeForm({ ...edgeForm, properties })}
                 placeholder='{ "weight": 0.8 }'
               />
             </label>
