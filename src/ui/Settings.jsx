@@ -20,6 +20,9 @@ export default function Settings() {
   const [migrationStatus, setMigrationStatus] = useState([]);
   const [migrationMessage, setMigrationMessage] = useState('');
   const [isApplyingMigrations, setIsApplyingMigrations] = useState(false);
+  const [queryText, setQueryText] = useState('');
+  const [queryMessage, setQueryMessage] = useState('');
+  const [queryResult, setQueryResult] = useState(null);
 
   useEffect(() => {
     const initialize = async () => {
@@ -100,6 +103,26 @@ export default function Settings() {
       setMigrationMessage('✗ ' + error.message);
     } finally {
       setIsApplyingMigrations(false);
+    }
+  };
+
+  const handleRunQuery = async () => {
+    if (!queryText.trim()) {
+      setQueryMessage('✗ Enter a SQL query to run.');
+      setQueryResult(null);
+      return;
+    }
+
+    setQueryMessage('Running query...');
+    setQueryResult(null);
+    const result = await window.api.database.query(queryText);
+
+    if (result.success) {
+      const prefix = Array.isArray(result.data) ? `${result.data.length} row(s) returned.` : 'Query executed.';
+      setQueryMessage('✓ ' + prefix);
+      setQueryResult(result.data);
+    } else {
+      setQueryMessage('✗ ' + result.message);
     }
   };
 
@@ -299,6 +322,75 @@ export default function Settings() {
                 ))
               )}
             </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 32 }}>
+        <h2>Query</h2>
+        <p style={{ color: '#6c757d', marginTop: 8 }}>
+          Run an arbitrary SQL query against the connected database.
+        </p>
+
+        <div style={{
+          marginTop: 12,
+          padding: 12,
+          backgroundColor: '#fff',
+          border: '1px solid #dee2e6',
+          borderRadius: 4,
+          maxWidth: 800,
+        }}>
+          {!isConnected && (
+            <div style={{ color: '#721c24', marginBottom: 8 }}>
+              Connect to the database to run queries.
+            </div>
+          )}
+
+          <textarea
+            value={queryText}
+            onChange={(e) => setQueryText(e.target.value)}
+            placeholder="SELECT * FROM table_name LIMIT 10;"
+            rows={5}
+            disabled={!isConnected}
+            style={{ ...inputStyle, width: '100%', resize: 'vertical', minHeight: 120 }}
+          />
+
+          <div style={{ display: 'flex', marginTop: 8 }}>
+            <button
+              onClick={handleRunQuery}
+              disabled={!isConnected}
+              style={{ ...buttonStyle, opacity: !isConnected ? 0.6 : 1 }}
+            >
+              Run Query
+            </button>
+          </div>
+
+          {queryMessage && (
+            <div style={{
+              marginTop: 8,
+              padding: 8,
+              backgroundColor: '#f8f9fa',
+              border: '1px solid #dee2e6',
+              borderRadius: 4,
+              fontSize: 14,
+            }}>
+              {queryMessage}
+            </div>
+          )}
+
+          {queryResult !== null && (
+            <pre style={{
+              marginTop: 8,
+              padding: 12,
+              backgroundColor: '#0f172a',
+              color: '#e2e8f0',
+              borderRadius: 4,
+              overflowX: 'auto',
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}>
+              {JSON.stringify(queryResult, null, 2)}
+            </pre>
           )}
         </div>
       </div>
