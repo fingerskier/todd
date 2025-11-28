@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const containerStyle = {
   border: '1px solid #ced4da',
@@ -39,6 +39,11 @@ export default function JsonEditor({ value, onChange, placeholder = '{ "name": "
   const [entries, setEntries] = useState([createEmptyEntry()]);
   const [error, setError] = useState('');
   const [serializedJson, setSerializedJson] = useState('');
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const parseIncomingValue = () => {
     if (!value || !value.trim()) {
@@ -111,15 +116,15 @@ export default function JsonEditor({ value, onChange, placeholder = '{ "name": "
     if (errorMessage) {
       setError(errorMessage);
       setSerializedJson('');
-      onChange('');
+      onChangeRef.current('');
       return;
     }
 
     const stringified = Object.keys(jsonObject).length ? JSON.stringify(jsonObject, null, 2) : '';
     setError('');
     setSerializedJson(stringified);
-    onChange(stringified);
-  }, [entries, onChange]);
+    onChangeRef.current(stringified);
+  }, [entries]);
 
   const updateEntry = (id, changes) => {
     setEntries((current) => current.map((entry) => (entry.id === id ? { ...entry, ...changes } : entry)));
