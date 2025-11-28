@@ -78,8 +78,8 @@ export async function handleVectorSideEffects(client, sql, params = [], result =
 
   if (normalized.startsWith('insert into logs')) {
     await upsertVector(client, 'log', result.lastInsertRowid, {
-      message: params?.[1] ?? params?.[0],
-      metadata: params?.[2] ?? params?.[1],
+      message: params?.[0],
+      metadata: params?.[1],
     });
     return;
   }

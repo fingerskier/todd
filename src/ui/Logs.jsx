@@ -88,8 +88,8 @@ export default function Logs() {
       setEditingId(null);
     } else {
       const result = await window.api.database.query(
-        'INSERT INTO logs (level, message, metadata) VALUES (?, ?, ?)',
-        [form.level, form.message, metadataPayload],
+        'INSERT INTO logs (message, metadata) VALUES (?, ?)',
+        [form.message, metadataPayload],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -232,11 +232,8 @@ export default function Logs() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, color: '#0d6efd' }}>INFO</div>
-                      <div style={{ color: '#6c757d', fontSize: 13 }}>
-                        Created: {new Date(entry.created_at).toLocaleString()}
-                      </div>
+                    <div style={{ color: '#6c757d', fontSize: 13 }}>
+                      Created: {new Date(entry.created_at).toLocaleString()}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
