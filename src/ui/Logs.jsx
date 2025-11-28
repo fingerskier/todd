@@ -232,11 +232,8 @@ export default function Logs() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, color: '#0d6efd' }}>INFO</div>
-                      <div style={{ color: '#6c757d', fontSize: 13 }}>
-                        Created: {new Date(entry.created_at).toLocaleString()}
-                      </div>
+                    <div style={{ color: '#6c757d', fontSize: 13 }}>
+                      Created: {new Date(entry.created_at).toLocaleString()}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
