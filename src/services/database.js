@@ -95,7 +95,14 @@ export async function query(text, params = []) {
       : { success: true, data: result };
 
     if (!isSelect) {
-      await handleVectorSideEffects(client, text, params, result);
+      try {
+        await handleVectorSideEffects(client, text, params, result);
+        response.vectorsUpdated = true;
+      } catch (vectorError) {
+        console.warn('Vector side effects failed:', vectorError);
+        response.vectorsUpdated = false;
+        response.vectorWarning = vectorError.message;
+      }
     }
 
     return response;
