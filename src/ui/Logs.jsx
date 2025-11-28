@@ -32,7 +32,11 @@ export default function Logs() {
       'SELECT id, message, metadata, created_at FROM logs ORDER BY created_at DESC',
     );
     if (result.success) {
-      setEntries(result.data);
+      const parsedRows = (result.data ?? []).map((row) => ({
+        ...row,
+        metadata: row.metadata ? JSON.parse(row.metadata) : null,
+      }));
+      setEntries(parsedRows);
     } else {
       setStatus(result.message);
       setEntries([]);
@@ -70,10 +74,12 @@ export default function Logs() {
       return;
     }
 
+    const metadataPayload = metadata ? JSON.stringify(metadata) : null;
+
     if (editingId) {
       const result = await window.api.database.query(
-        'UPDATE logs SET message = $1, metadata = $2 WHERE id = $3 RETURNING id',
-        [form.message, metadata, editingId],
+        'UPDATE logs SET message = ?, metadata = ? WHERE id = ?',
+        [form.message, metadataPayload, editingId],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -82,8 +88,8 @@ export default function Logs() {
       setEditingId(null);
     } else {
       const result = await window.api.database.query(
-        'INSERT INTO logs (message, metadata) VALUES ($1, $2) RETURNING id',
-        [form.message, metadata],
+        'INSERT INTO logs (level, message, metadata) VALUES (?, ?, ?)',
+        [form.level, form.message, metadataPayload],
       );
       if (!result.success) {
         setStatus(result.message);
@@ -105,7 +111,7 @@ export default function Logs() {
 
   const handleDelete = async (id) => {
     setStatus('');
-    const result = await window.api.database.query('DELETE FROM logs WHERE id = $1', [id]);
+    const result = await window.api.database.query('DELETE FROM logs WHERE id = ?', [id]);
     if (!result.success) {
       setStatus(result.message);
       return;

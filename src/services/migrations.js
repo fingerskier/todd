@@ -6,88 +6,70 @@ export const migrations = [
     name: 'initial-schema',
     description: 'Create migrations, logs, kv, graph, and vector tables',
     up: async (client) => {
-      let res0 = await client.query(`
+      await client.exec(`
         CREATE TABLE IF NOT EXISTS migrations (
           id INTEGER PRIMARY KEY,
           name TEXT NOT NULL,
-          applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
       `);
-      console.log('Created migrations table', res0);
 
-      let res1 = await client.query(`
+      await client.exec(`
         CREATE TABLE IF NOT EXISTS logs (
-          id SERIAL PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           message TEXT NOT NULL,
-          metadata JSONB,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          metadata TEXT,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
       `);
-      console.log('Created logs table',  res1);
 
-
-      let res2 = await client.query(`
+      await client.exec(`
         CREATE TABLE IF NOT EXISTS kv (
           key TEXT PRIMARY KEY,
-          value JSONB,
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          value TEXT,
+          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
       `);
-      console.log('Created kv table', res2);
 
-      let res3 = await client.query(`
+      await client.exec(`
         CREATE TABLE IF NOT EXISTS nodes (
-          id SERIAL PRIMARY KEY,  -- Unique identifier for each node
-          label TEXT,             -- Optional: A label or type for the node
-          properties JSONB        -- Optional: Flexible storage for node properties (e.g., name, age)
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          label TEXT,
+          properties TEXT
         );
       `);
-      console.log('Created nodes table', res3);
 
-      let res4 = await client.query(`
+      await client.exec(`
         CREATE TABLE IF NOT EXISTS edges (
-          id SERIAL PRIMARY KEY,  -- Unique identifier for each edge
-          source_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,  -- Reference to the source node
-          target_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,  -- Reference to the target node
-          label TEXT,             -- Optional: A label or type for the edge (e.g., 'friend', 'parent')
-          properties JSONB,       -- Optional: Flexible storage for edge properties (e.g., weight, since)
-          directed BOOLEAN DEFAULT TRUE  -- Optional: Indicates if the edge is directed (true) or undirected (false)
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
+          target_id INTEGER REFERENCES nodes(id) ON DELETE CASCADE,
+          label TEXT,
+          properties TEXT,
+          directed BOOLEAN DEFAULT TRUE
         );
       `);
-      console.log('Created edges table', res4);
 
-      // let res5 = await client.query('CREATE EXTENSION IF NOT EXISTS vector');
-      // console.log('Ensured vector extension', res5);
-
-      const vectorTypeRes = await client.query(`
-        SELECT typname, nspname
-        FROM pg_type t
-        JOIN pg_namespace n ON t.typnamespace = n.oid
-        WHERE typname = 'vector'
-      `);
-      console.log('Vector Type Info:', vectorTypeRes.rows);  // Should show [{ typname: 'vector', nspname: 'public' }]
-
-      let res6 = await client.query(`
+      await client.exec(`
         CREATE TABLE IF NOT EXISTS vectors (
-          id SERIAL PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           item_type TEXT NOT NULL,
           item_id INTEGER NOT NULL,
-          vector VECTOR(384) NOT NULL,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          vector TEXT NOT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           UNIQUE (item_type, item_id)
         );
       `);
-      console.log('Created vectors table', res6);
     },
   },
 ];
 
 async function ensureMigrationsTable(client) {
-  await client.query(`
+  await client.exec(`
     CREATE TABLE IF NOT EXISTS migrations (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
-      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }
@@ -121,17 +103,17 @@ export async function applyPendingMigrations() {
 
     const appliedMigrations = [];
 
-    await client.query('BEGIN');
+    await client.exec('BEGIN');
     try {
       for (const migration of pending) {
         await migration.up(client);
-        await client.query('INSERT INTO migrations (id, name) VALUES ($1, $2)', [migration.id, migration.name]);
+        await client.query('INSERT INTO migrations (id, name) VALUES (?, ?)', [migration.id, migration.name]);
         appliedMigrations.push(migration.name);
       }
-      await client.query('COMMIT');
+      await client.exec('COMMIT');
       return { applied: appliedMigrations, message: 'Migrations applied successfully' };
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.exec('ROLLBACK');
       throw error;
     }
   });
