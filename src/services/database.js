@@ -20,22 +20,12 @@ function resolveDatabasePath(config) {
   return path.join(base, 'todd.db');
 }
 
-function buildOptions(config = {}) {
-  const options = {};
-
-  if (config.url) {
-    options.syncUrl = config.url;
+function buildConnectionTarget(config = {}, resolvedPath) {
+  if (config.url && config.authToken) {
+    return { path: resolvedPath, url: config.url, authToken: config.authToken, sync: 'full' };
   }
 
-  if (config.authToken) {
-    options.authToken = config.authToken;
-  }
-
-  if (config.sync) {
-    options.sync = config.sync;
-  }
-
-  return options;
+  return resolvedPath;
 }
 
 function createClientWrapper() {
@@ -68,7 +58,8 @@ export async function connect(config = {}) {
     }
 
     currentPath = resolveDatabasePath(config);
-    db = await connectDatabase(currentPath, buildOptions(config));
+    const connectionTarget = buildConnectionTarget(config, currentPath);
+    db = await connectDatabase(connectionTarget);
     await db.exec('PRAGMA foreign_keys = ON;');
 
     return { success: true, message: 'Connected to embedded database', path: currentPath };
@@ -118,7 +109,8 @@ export async function withClient(callback) {
 export async function testConnection(config = {}) {
   try {
     const testPath = resolveDatabasePath(config);
-    const testDb = await connectDatabase(testPath, buildOptions(config));
+    const connectionTarget = buildConnectionTarget(config, testPath);
+    const testDb = await connectDatabase(connectionTarget);
     await testDb.exec('PRAGMA foreign_keys = ON;');
     await testDb.close();
 
