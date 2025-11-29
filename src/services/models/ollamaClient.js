@@ -1,7 +1,7 @@
-import { Ollama, ollama as defaultClient } from 'ollama';
+import ollama, { Ollama } from 'ollama';
 
 const DEFAULT_HOST = process.env.OLLAMA_HOST?.replace(/\/$/, '');
-const client = DEFAULT_HOST ? new Ollama({ host: DEFAULT_HOST }) : defaultClient;
+const client = DEFAULT_HOST ? new Ollama({ host: DEFAULT_HOST }) : ollama;
 
 function normalizeError(error) {
   if (error?.error) {
