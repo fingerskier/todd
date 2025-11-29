@@ -1,15 +1,12 @@
 import { embed } from './ollamaClient.js';
-
-const DEFAULT_GEMMA_EMBED_MODEL = process.env.TODD_GEMMA_EMBED_MODEL || 'gemma2:2b-instruct';
+import { getEmbeddingModel } from './modelConfig.js';
 
 export async function embedText(text, options = {}) {
-  const model = options.model || DEFAULT_GEMMA_EMBED_MODEL;
+  const model = getEmbeddingModel(options.model);
   return embed({
     model,
     input: text,
   });
 }
 
-export function getGemmaEmbedModel() {
-  return DEFAULT_GEMMA_EMBED_MODEL;
-}
+export { getEmbeddingModel };

@@ -25,10 +25,10 @@ Use `electron-store` to persist application settings.
   * Menu system (top bar and context menus)
 * libsql/sqlite DB backend
   * optional Turso cloud sync
-* Google Gemini local models for LLM and embedding
+* Ollama-hosted Gemma local models for LLM and embedding
 
-## Local Gemini / Gemma models
-The app expects local-only model endpoints so that nothing leaves the device. The included service modules in `src/services/models` target [Ollama](https://ollama.com/) for both generation ("Gemini" via the Gemma 2 instruction models) and embeddings.
+## Local Gemma models
+The app expects local-only model endpoints so that nothing leaves the device. The included service modules in `src/services/models` target [Ollama](https://ollama.com/) for both generation (Gemma 2 instruction models) and embeddings.
 
 ### Install Ollama and pull the models
 1. Install Ollama for your platform from https://ollama.com/download and ensure the daemon is running (defaults to `http://127.0.0.1:11434`).
@@ -37,14 +37,15 @@ The app expects local-only model endpoints so that nothing leaves the device. Th
    * `ollama pull gemma2:2b-instruct` – lightweight option used for embeddings by default.
 
 > You can override the defaults with environment variables:
-> * `TODD_GEMINI_MODEL` changes the instruction-tuned model used for text generation.
-> * `TODD_GEMMA_EMBED_MODEL` changes the model used for embeddings.
+> * `TODD_GENERATION_MODEL` changes the instruction-tuned model used for text generation.
+> * `TODD_EMBEDDING_MODEL` changes the model used for embeddings.
 > * `OLLAMA_HOST` points the services to a non-standard Ollama URL (e.g., a different port or remote host).
 
 ### I/O modules
 * `src/services/models/ollamaClient.js` – minimal HTTP client for Ollama's `/api/generate` and `/api/embeddings` endpoints.
-* `src/services/models/geminiLocal.js` – convenience wrapper for running prompts against the local Gemini/Gemma LLM.
+* `src/services/models/gemmaLocal.js` – convenience wrapper for running prompts against the local Gemma LLM.
 * `src/services/models/gemmaEmbeddings.js` – helper for producing embeddings locally.
+* `src/services/models/modelConfig.js` – centralized defaults and environment variable handling for generation and embedding models.
 
 
 ## Features Under Construction
@@ -62,7 +63,7 @@ The app expects local-only model endpoints so that nothing leaves the device. Th
   * key/value states
   * graph (nodes & edges) data
   * vector store {type:log|kv|graph, id, vector(384)}
-* Google gemini-node and gemmaEmbedder **local** models
+* Ollama Gemma generation and embedding **local** models
 * Base UX
   * User enters some text which gets captured in the logs
   * Local AI infers possible KV or Graph entries
